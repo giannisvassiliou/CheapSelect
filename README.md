@@ -1,4 +1,5 @@
-# CheapSelect
+# When Does Selective Neural Re-Ranking Pay Off? An Experimental Study of Label-Free Selectors
+
 
 Code, pre-registrations and per-query results for the paper
 
