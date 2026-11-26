@@ -1,4 +1,4 @@
-# When Does Label-Free Selective Re-Ranking Pay Off?
+# CheapSelect
 
 Code, pre-registrations and per-query results for the paper
 
@@ -13,6 +13,8 @@ Neural re-ranking improves retrieval, but it is expensive. Skipping it for queri
 - **Two pre-registered held-out tests** of the practitioner checklist, each on 15 further pairs from collections never used to design it.
 
 Every per-query result is released, so all tables except the timing measurements can be recomputed on a CPU in minutes.
+
+**Results archive.** The results (per-query files, analysis tables, run logs and checksums; 374 files) are not in the repository tree. They are attached to the release as one file: download `CheapSelect_results.zip` from [release v1.0](https://github.com/giannisvassiliou/CheapSelect/releases/tag/v1.0) and unzip it in the repository folder, which creates `results/`.
 
 ---
 
@@ -46,11 +48,13 @@ prereg/              pre-registration files written before the corresponding run
   FROZEN_dbpedia.txt     hypothesis, label mapping and primary test for DBpedia-Entity (tag alarm)
   FROZEN_holdout47.txt   checklist v1: rule, hypotheses H1-H4, md5 of the decision code
   FROZEN_holdout48.txt   checklist v2: rule, hypotheses H1'-H4', md5 of the decision code
-results/
+results/             NOT in the tree: unzip CheapSelect_results.zip from the v1.0 release here
   per_query/<collection>/selective_pq_<tag>.jsonl   one line per test query (format below)
-  heldout1/            outputs of holdout47.py (h47.md, h47_pairs.csv, h47_buckets.csv) and budgets46.py
-  heldout2/            outputs of holdout48.py (h48.md, h48_pairs.csv) and budgets46.py
-  tables/, logs/       analysis outputs and run logs (filled by tools/collect_results.sh)
+  tables/              analysis outputs: b46/c46/l46/g46/p46/t46 (main study), h47*/b47* (held-out test 1),
+                       e47* (exploratory), h48*/b48* (held-out test 2), and earlier statistics
+  logs/                progress logs of the run scripts
+  development/         validation-split runs on STaRK made while designing the tag alarm, before the frozen
+                       test-split runs (tags final, final2); not used for any reported number
   MANIFEST.md5         checksums of everything under results/
 figures/             scripts and data for the figures (curves_grid.py, gainfig.py, enrichfig.py)
 tools/collect_results.sh   copies per-query files, tables and logs from a working directory into results/
@@ -60,9 +64,14 @@ tools/collect_results.sh   copies per-query files, tables and logs from a workin
 
 ## Quick check without a GPU
 
-Everything below needs only the per-query files in `results/per_query/` and a CPU.
+Everything below needs only the per-query files and a CPU.
 
 ```bash
+git clone https://github.com/giannisvassiliou/CheapSelect.git && cd CheapSelect
+git checkout v1.0
+# download CheapSelect_results.zip from the v1.0 release into this folder, then:
+unzip CheapSelect_results.zip                 # creates results/
+(cd results && md5sum -c --quiet MANIFEST.md5) && echo "results intact"
 pip install numpy scipy
 cd src
 ln -s ../results/per_query/* .          # the scripts address collections as <folder>:<tag>
@@ -71,7 +80,7 @@ ln -s ../results/per_query/* .          # the scripts address collections as <fo
 md5sum holdout47.py calib46.py common46.py | md5sum   # = combined md5 in prereg/FROZEN_holdout47.txt
 md5sum holdout48.py calib46.py common46.py | md5sum   # = combined md5 in prereg/FROZEN_holdout48.txt
 
-# 2. second held-out test (about 15 minutes; output identical to results/heldout2/h48.md)
+# 2. second held-out test (about 15 minutes; output identical to results/tables/h48.md)
 python holdout48.py beir_cqa_{physics,unix,tex,programmers}:h48{mini,bge,monot5} beir_fever:h48{mini,bge,monot5} \
   --ref47 beir_{cqa_english,cqa_gaming,climate-fever,hotpotqa,nq}:h47{mini,bge,monot5} \
   --insample {amazon,mag,prime}_testfull:full dbpedia_test:dbp beir_{scifact,nfcorpus,fiqa,arguana,scidocs}:bge \
@@ -143,6 +152,7 @@ After the runs, collect everything into the repository:
 
 ```bash
 bash tools/collect_results.sh /path/to/workdir
+zip -qr CheapSelect_results.zip results      # the archive attached to the release
 ```
 
 ### Pre-registered tests (steps 12 and 13)
@@ -177,7 +187,7 @@ Step 3 refuses to run if that code has changed. To check our runs, copy `prereg/
 | `alarm` | GLiNER tag alarm |
 | `cef` (43+) | re-ranker features used by cascades: `top1`, `margin`, `agree_top1`, `rho10`, `std` |
 
-Gain is `g = ce.MRR − bm.MRR`. A selector re-ranks low scores first.
+Gain is `g = ce.MRR − bm.MRR`. A selector re-ranks low scores first. Files named `selective_pq_<tag>ndcg.jsonl` hold the same queries with binary nDCG@10 in place of MRR, for the statistics scripts that read the `MRR` field.
 
 ## Provenance of the runs
 
