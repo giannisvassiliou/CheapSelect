@@ -90,9 +90,7 @@ cd CheapSelect
 git checkout v1.0
 ```
 
-Download `CheapSelect_results.zip` from the
-[v1.0 release](https://github.com/giannisvassiliou/CheapSelect/releases/tag/v1.0)
-into this folder, then:
+Download `CheapSelect_results.zip` into this folder, then:
 
 ```bash
 unzip CheapSelect_results.zip      # creates results/
@@ -323,7 +321,7 @@ The pipeline grew during the study. Each run of the paper was made with the vers
 - Binary nDCG@10 (unjudged records count as non-relevant; ideal DCG over min(|rel|, 10)) is not comparable with published graded nDCG@10.
 - Model checkpoints are loaded from Hugging Face by name: `cross-encoder/ms-marco-MiniLM-L-6-v2`, `BAAI/bge-reranker-v2-m3`, `castorini/monot5-3b-msmarco-10k`, `Qwen/Qwen3-Reranker-8B`, `sentence-transformers/all-MiniLM-L6-v2`, `urchade/gliner_medium-v2.1`.
 
-## License and citation
+## License
 
 Code: MIT (see `LICENSE`). The collections keep their own licenses. Only derived per-query numbers are released, never corpus text or queries.
 
