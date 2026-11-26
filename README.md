@@ -20,45 +20,61 @@ Every per-query result is released, so all tables except the timing measurements
 
 ## Contents
 
-```
-README.md            this file
-requirements.txt     Python packages (exact versions: requirements.lock)
-src/                 all code; the run scripts expect to be started from this folder (or set WORKDIR)
-  combo_search44.py    retrieval + re-ranking pipeline (BM25 / dense / hybrid first stage, re-rankers, selector
-                       signals, per-query output); combo_search33/34/37/38/42/43.py are the earlier versions that
-                       produced some of the paper's runs (see "Provenance")
-  prepare_beir.py      BEIR / DBpedia-Entity download and conversion
-  fetch_mteb47.py      CQADupStack from its MTEB copy on Hugging Face (de-duplicates the judgements)
-  common46.py          loading per-query files; selector scores; budget helpers
-  budgets46.py         smallest non-inferior budgets (point and bootstrap) per selector       -> budget tables
-  calib46.py           calibration with 100-500 labels: point, UCB95, UCB-simul, LTT (Hoeffding,
-                       empirical Bernstein), CRC; random baselines; equal-label comparison       -> calibration tables
-  groups46.py          loss per query group (query type, tag alarm, query length)              -> group table
-  paired46.py          re-rankers compared on the same query ids                               -> LLM table
-  timing46.py          first-stage, selector, re-ranker and router costs; calibrated policies end to end (GPU)
-  why42.py             enrichment and helped/hurt decomposition of skipped queries             -> Section 5.2
-  router41.py, preret41.py, genc45.py     supervised routers, pre-retrieval proxies, re-implemented 3-class router
-  cascade43.py, regime43.py, ndcg43.py, calib43.py, latency42.py, lat45.py, sel_stats40.py, qpp_gain_corr.py
-                       cascades, regime statistics, nDCG@10 budgets, earlier calibration, latency, statistics
-  holdout47.py         pre-registered test 1 of the checklist (v1)
-  explore47.py         exploratory follow-up to test 1 (not pre-registered; shown for transparency)
-  holdout48.py         pre-registered test 2 of the revised checklist (v2)
-  run_*.sh             the run scripts, in the order of "Reproducing the paper"
-prereg/              pre-registration files written before the corresponding runs
-  FROZEN_dbpedia.txt     hypothesis, label mapping and primary test for DBpedia-Entity (tag alarm)
-  FROZEN_holdout47.txt   checklist v1: rule, hypotheses H1-H4, md5 of the decision code
-  FROZEN_holdout48.txt   checklist v2: rule, hypotheses H1'-H4', md5 of the decision code
-results/             NOT in the tree: unzip CheapSelect_results.zip from the v1.0 release here
-  per_query/<collection>/selective_pq_<tag>.jsonl   one line per test query (format below)
-  tables/              analysis outputs: b46/c46/l46/g46/p46/t46 (main study), h47*/b47* (held-out test 1),
-                       e47* (exploratory), h48*/b48* (held-out test 2), and earlier statistics
-  logs/                progress logs of the run scripts
-  development/         validation-split runs on STaRK made while designing the tag alarm, before the frozen
-                       test-split runs (tags final, final2); not used for any reported number
-  MANIFEST.md5         checksums of everything under results/
-figures/             scripts and data for the figures (curves_grid.py, gainfig.py, enrichfig.py)
-tools/collect_results.sh   copies per-query files, tables and logs from a working directory into results/
-```
+| Path | What it is |
+|---|---|
+| `README.md`, `LICENSE`, `CITATION.cff` | this file, MIT license, citation |
+| `requirements.txt`, `requirements.lock` | Python packages; exact versions used for the paper |
+| `src/` | all code; run the scripts from this folder (or set `WORKDIR`) |
+| `prereg/` | pre-registration files, written before the corresponding runs |
+| `figures/` | scripts and data for the figures |
+| `tools/collect_results.sh` | copies per-query files, tables and logs from a working folder into `results/` |
+| `results/` | **not in the tree**: unzip `CheapSelect_results.zip` from the v1.0 release |
+
+**`src/`: pipeline and data**
+
+| File | Purpose |
+|---|---|
+| `combo_search44.py` | retrieval and re-ranking pipeline: BM25, dense or hybrid first stage; re-rankers; selector signals; per-query output |
+| `combo_search33/34/37/38/42/43.py` | earlier versions of the same pipeline that produced some of the paper's runs (see "Provenance") |
+| `prepare_beir.py` | BEIR and DBpedia-Entity download and conversion |
+| `fetch_mteb47.py` | CQADupStack from its MTEB copy on Hugging Face (removes duplicate judgements) |
+
+**`src/`: analyses**
+
+| File | Purpose | Paper |
+|---|---|---|
+| `common46.py` | loading per-query files, selector scores, budget helpers | all |
+| `budgets46.py` | smallest non-inferior budgets per selector (point and bootstrap) | budget tables |
+| `calib46.py` | calibration with 100–500 labels: point, UCB95, UCB-simul, LTT (Hoeffding, empirical Bernstein), CRC; random baselines; equal-label comparison | calibration tables |
+| `groups46.py` | loss per query group (query type, tag alarm, query length) | group table |
+| `paired46.py` | re-rankers compared on the same query ids | LLM table |
+| `timing46.py` | first-stage, selector, re-ranker and router costs; calibrated policies end to end (GPU) | timing audit |
+| `why42.py` | enrichment and helped/hurt decomposition of skipped queries | Section 5.2 |
+| `router41.py`, `preret41.py`, `genc45.py` | supervised routers, pre-retrieval proxies, re-implemented 3-class router | router section |
+| `cascade43.py`, `regime43.py`, `ndcg43.py` | cascades, regime statistics, nDCG@10 budgets | Section 5 |
+| `calib42.py`, `calib43.py`, `latency42.py`, `lat45.py`, `sel_stats.py`, `sel_stats40.py`, `qpp_gain_corr.py` | earlier calibration, latency and statistics scripts called by the run scripts | |
+| `holdout47.py` | pre-registered test 1 of the checklist (v1) | Section 6.2 |
+| `explore47.py` | exploratory follow-up to test 1 (not pre-registered; included for transparency) | Section 6.3 |
+| `holdout48.py` | pre-registered test 2 of the revised checklist (v2) | Section 6.3 |
+| `run_*.sh` | run scripts, in the order of "Reproducing the paper" | |
+
+**`prereg/`**
+
+| File | Content |
+|---|---|
+| `FROZEN_dbpedia.txt` | hypothesis, label mapping and primary test for DBpedia-Entity (tag alarm) |
+| `FROZEN_holdout47.txt` | checklist v1: rule, hypotheses H1–H4, md5 of the decision code |
+| `FROZEN_holdout48.txt` | checklist v2: rule, hypotheses H1′–H4′, md5 of the decision code |
+
+**`results/`** (from `CheapSelect_results.zip`)
+
+| Path | Content |
+|---|---|
+| `per_query/<collection>/selective_pq_<tag>.jsonl` | one line per test query (format below) |
+| `tables/` | analysis outputs: `b46`, `c46`, `l46`, `g46`, `p46`, `t46` (main study); `h47*`, `b47*` (held-out test 1); `e47*` (exploratory); `h48*`, `b48*` (held-out test 2); earlier statistics |
+| `logs/` | progress logs of the run scripts |
+| `development/` | validation-split runs on STaRK made while designing the tag alarm, before the frozen test-split runs (tags `final`, `final2`); not used for any reported number |
+| `MANIFEST.md5` | checksums of everything under `results/` |
 
 ---
 
@@ -71,26 +87,31 @@ git clone https://github.com/giannisvassiliou/CheapSelect.git && cd CheapSelect
 git checkout v1.0
 # download CheapSelect_results.zip from the v1.0 release into this folder, then:
 unzip CheapSelect_results.zip                 # creates results/
-(cd results && md5sum -c --quiet MANIFEST.md5) && echo "results intact"
+(cd results && md5sum -c --quiet MANIFEST.md5) && echo OK
 pip install numpy scipy
 cd src
 ln -s ../results/per_query/* .          # the scripts address collections as <folder>:<tag>
 
 # 1. the decision code is the code that was pre-registered
-md5sum holdout47.py calib46.py common46.py | md5sum   # = combined md5 in prereg/FROZEN_holdout47.txt
-md5sum holdout48.py calib46.py common46.py | md5sum   # = combined md5 in prereg/FROZEN_holdout48.txt
+#    (compare with the combined md5 in prereg/FROZEN_holdout47.txt and FROZEN_holdout48.txt)
+md5sum holdout47.py calib46.py common46.py | md5sum
+md5sum holdout48.py calib46.py common46.py | md5sum
 
-# 2. second held-out test (about 15 minutes; output identical to results/tables/h48.md)
-python holdout48.py beir_cqa_{physics,unix,tex,programmers}:h48{mini,bge,monot5} beir_fever:h48{mini,bge,monot5} \
-  --ref47 beir_{cqa_english,cqa_gaming,climate-fever,hotpotqa,nq}:h47{mini,bge,monot5} \
-  --insample {amazon,mag,prime}_testfull:full dbpedia_test:dbp beir_{scifact,nfcorpus,fiqa,arguana,scidocs}:bge \
-             {amazon,mag,prime}_testfull:mini dbpedia_test:mini beir_{scifact,nfcorpus,fiqa,arguana,scidocs}:mini \
-             {amazon,mag,prime}_testfull:monot5 dbpedia_test:monot5 beir_{scifact,nfcorpus,fiqa,arguana,scidocs}:monot5 \
-  --out h48_check
+# 2. second held-out test (about 15 minutes; same output as results/tables/h48.md)
+NEW="beir_cqa_physics beir_cqa_unix beir_cqa_tex beir_cqa_programmers beir_fever"
+OLD="beir_cqa_english beir_cqa_gaming beir_climate-fever beir_hotpotqa beir_nq"
+BEIR="beir_scifact beir_nfcorpus beir_fiqa beir_arguana beir_scidocs"
+STARK="amazon_testfull mag_testfull prime_testfull"
+H2=$(for d in $NEW; do for r in mini bge monot5; do echo -n "$d:h48$r "; done; done)
+H1=$(for d in $OLD; do for r in mini bge monot5; do echo -n "$d:h47$r "; done; done)
+IN=$(for d in $STARK; do echo -n "$d:full $d:mini $d:monot5 "; done
+     echo -n "dbpedia_test:dbp dbpedia_test:mini dbpedia_test:monot5 "
+     for d in $BEIR; do echo -n "$d:bge $d:mini $d:monot5 "; done)
+python holdout48.py $H2 --ref47 $H1 --insample $IN --out h48_check
 
-# 3. budgets and calibration for the 27 pairs
-python budgets46.py <the 27 pairs as above> --out b46_check
-python calib46.py  <the 27 pairs as above> --out c46_check
+# 3. budgets and calibration for the 27 study pairs
+python budgets46.py $IN --out b46_check
+python calib46.py $IN --out c46_check
 ```
 
 All analyses use fixed seeds (splits: seed 42), so their outputs match the released ones exactly.
