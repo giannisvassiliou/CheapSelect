@@ -1,0 +1,29 @@
+PRE-REGISTRATION 2: revised checklist (v2) on a second held-out set
+Written 2026-11-20 22:29:48 EET BEFORE any run on these collections. Nothing below may change after seeing results.
+
+Why a second test: v2 was designed after the first held-out test (FROZEN_holdout47.txt), where the fixed choice of WIG
+left about 10 points of saving and the rule "rho >= 15 -> re-rank all" missed HotpotQA. Its success there is partly
+circular; this test uses collections that played no part in designing v1 or v2.
+
+Collections (none used before; up to 1000 test queries each, seed 0):
+  CQADupStack physics, unix, tex, programmers (MTEB copy of the BEIR data); FEVER (BEIR), a different task family.
+Re-rankers: MiniLM-L6, bge-reranker-v2-m3, monoT5-3B; pipeline combo_search44.py unchanged (BM25 top-100).
+
+Decision rule v2 (holdout48.py): n = 200 labelled queries; certify every cheap selector (six proxies + tag alarm) and
+analytic random on them with a one-sided normal bound at z = Phi^-1(1 - 0.05 / (selectors x 10 thresholds)); keep the
+largest estimated saving; re-rank all if none skips anything. No regime rule. 200 splits, delta in {0.5, 1, 2} points,
+MRR@10 and nDCG@10; correct = no violation and regret <= 5 points (as before).
+
+Hypotheses (pooled over the cells of THIS test; FEVER is also reported on its own):
+  H1 (safety)       v2 exceeds delta on the test queries in at most 5% of splits.
+  H2 (saving)       v2's mean saving is at least v1's.
+  H3 (quality)      v2's P(correct) is at least v1's.
+  H4 (no safety cost) v2's violation rate is at most v1's + 1 point.
+Each fails if its inequality does not hold. The first held-out set and the 27 study pairs are reported for comparison.
+
+md5 of the decision code (holdout48.py, calib46.py, common46.py, combined):
+8bde9c7258113ecadf4ca41351c8bf92
+af65337c5162f991246bd86d1c56c5df  holdout48.py
+2e342baec78d84da2ca8ed38b42ad275  calib46.py
+06bbd9b9d9ab09aea25632ccc1880fb3  common46.py
+2c92098f562fe678db2c4a0bdefbcb35  combo_search44.py

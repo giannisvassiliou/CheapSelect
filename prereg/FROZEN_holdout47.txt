@@ -1,0 +1,29 @@
+PRE-REGISTRATION: held-out test of the practitioner checklist
+Written 2026-11-20 10:44:15 EET BEFORE any run on these collections. Nothing below may change after seeing results.
+
+Collections (BEIR test splits, none used to build the checklist; up to 1000 queries each, sampled with seed 0):
+  cqa_english cqa_gaming climate-fever hotpotqa nq
+Re-rankers: MiniLM-L6, bge-reranker-v2-m3, monoT5-3B; pipeline combo_search44.py unchanged (BM25 top-100).
+
+Decision rule (holdout47.py): n = 200 labelled queries; rho = mean gain on them / delta;
+  rho <= 1 -> random share (analytic, UCB95);  rho >= 15 -> re-rank all;
+  otherwise WIG certified with UCB95, kept only if its estimated saving beats random's.
+  delta in {0.5, 1, 2} points, MRR@10 and nDCG@10; 200 splits; correct = no violation and regret <= 5 points.
+
+Hypotheses and what counts as failure:
+  H1 (safety)    the checklist's policy exceeds delta on the test queries in at most 10% of splits, pooled over the
+                 held-out cells. Fails if above 10%.
+  H2 (quality)   the checklist is correct (no violation, within 5 points of the best certified policy in hindsight)
+                 in at least 75% of splits, pooled. Fails if below 75%.
+  H3 (value of the regime step)  the checklist's pooled P(correct) is not lower than that of "WIG vs random without
+                 the regime step" and of "always WIG". Reported either way.
+  H4 (units)     the boundaries hold in units of delta: pooled over held-out cells, the best policy in hindsight is
+                 random or none for rho <= 1, and selectors save less than 10% for rho >= 15. Reported per rho bucket.
+The in-sample 27 pairs are evaluated with the same code for comparison only.
+
+md5 of the decision code (holdout47.py, calib46.py, common46.py, combined):
+352fac9fee12125e8e09c0132d68a79b
+45a3a3cfc7708b06e50e023027200e83  holdout47.py
+2e342baec78d84da2ca8ed38b42ad275  calib46.py
+06bbd9b9d9ab09aea25632ccc1880fb3  common46.py
+2c92098f562fe678db2c4a0bdefbcb35  combo_search44.py

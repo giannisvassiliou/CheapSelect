@@ -1,0 +1,30 @@
+PRE-REGISTRATION: tag alarm on DBpedia-Entity v2 (BEIR test split, 400 queries)
+Written BEFORE any run on this dataset. Nothing below may change after seeing results.
+
+Hypothesis
+  Column-aware entity tags (tag alarm) choose questions for the reranker better than WIG
+  when the question NAMES an entity, and not otherwise.
+
+Data
+  BEIR dbpedia-entity, test split; relevant = qrel score >= 1.
+  Columns: title, abstract. Query type from the id prefix:
+    SemSearch_ES -> named entity | INEX_LD -> keyword | INEX_XER, SemSearch_LS, TREC_Entity -> list | QALD2 -> question
+
+Method (identical to the STaRK frozen run, combo_search34.py)
+  GLiNER urchade/gliner_medium-v2.1, threshold 0.5
+  labels -> columns: person, organization, location, creative work, event, product -> [title, abstract]
+  tag present = stem match OR SBERT (all-MiniLM-L6-v2) similarity >= 0.7   ("stem|sbert 0.7")
+  alarm = most tags matched by any row of BM25 top-100 minus tags matched by BM25's #1; fires if > 0
+  reranker BAAI/bge-reranker-v2-m3 (fp16) on BM25's top-100
+
+Primary test (one test, decided now)
+  tag alarm vs WIG-like, at the tag alarm's natural firing rate, MRR, paired sign-flip test,
+  on the "named entity" + "question" types together. Success = tag alarm higher with p < 0.05.
+
+Secondary (reported, not used to claim success)
+  same comparison on "keyword" and "list" types (prediction: no significant difference)
+  all of sel_stats sections A-G on the whole test set
+
+Interpretation fixed in advance
+  primary succeeds and keyword/list show no advantage -> entity-tag claim supported (with MAG)
+  primary fails                                        -> tags are not better than WIG; stop the tag claim
