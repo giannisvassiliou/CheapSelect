@@ -187,15 +187,22 @@ collection by hand, run the commands below from `src/`.
 the test questions are written next to it):
 
 ```bash
-for c in amazon mag prime; do
-  python combo_search44.py prepare-stark --name $c \
-    --split test --max-queries 0 --out ${c}_table
-  python combo_search44.py prepare-queries --name $c \
-    --split test --max-queries 0 --like ${c}_table \
-    --out ${c}_testfull
+python combo_search44.py prepare-stark --name amazon \
+  --split test --max-queries 0 --out amazon_paper
+python combo_search44.py prepare-stark --name mag \
+  --split test --max-queries 0 --out mag_paper
+python combo_search44.py prepare-stark --name prime \
+  --split test --max-queries 0 --out prime_full
+for p in "amazon amazon_paper" "mag mag_paper" \
+         "prime prime_full"; do
+  set -- $p
+  python combo_search44.py prepare-queries --name $1 \
+    --split test --max-queries 0 --like $2 \
+    --out $1_testfull
 done
 ```
 
+The folder names are the ones the run scripts expect.
 Defaults of `prepare-stark`: full corpus, textual attributes
 capped at 3,000 characters, and up to 20 linked items per relation
 type as extra columns. The columns used for each collection are
