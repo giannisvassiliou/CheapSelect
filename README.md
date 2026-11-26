@@ -326,4 +326,4 @@ The pipeline grew during the study. Each run of the paper was made with the vers
 
 Code: MIT (see `LICENSE`). The collections keep their own licenses. Only derived per-query numbers are released, never corpus text or queries.
 
-If you use the code or the per-query results, please cite the paper (see `CITATION.cff`; the DOI will be added on publication).
+
