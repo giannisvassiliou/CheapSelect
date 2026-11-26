@@ -83,33 +83,63 @@ Every per-query result is released, so all tables except the timing measurements
 Everything below needs only the per-query files and a CPU.
 
 ```bash
-git clone https://github.com/giannisvassiliou/CheapSelect.git && cd CheapSelect
+git clone https://github.com/giannisvassiliou/CheapSelect.git
+cd CheapSelect
 git checkout v1.0
-# download CheapSelect_results.zip from the v1.0 release into this folder, then:
-unzip CheapSelect_results.zip                 # creates results/
+```
+
+Download `CheapSelect_results.zip` from the
+[v1.0 release](https://github.com/giannisvassiliou/CheapSelect/releases/tag/v1.0)
+into this folder, then:
+
+```bash
+unzip CheapSelect_results.zip      # creates results/
 (cd results && md5sum -c --quiet MANIFEST.md5) && echo OK
 pip install numpy scipy
 cd src
-ln -s ../results/per_query/* .          # the scripts address collections as <folder>:<tag>
+# the scripts address collections as <folder>:<tag>
+ln -s ../results/per_query/* .
+```
 
-# 1. the decision code is the code that was pre-registered
-#    (compare with the combined md5 in prereg/FROZEN_holdout47.txt and FROZEN_holdout48.txt)
+**1. The decision code is the code that was pre-registered.**
+Compare the two lines with the combined md5 in
+`prereg/FROZEN_holdout47.txt` and `prereg/FROZEN_holdout48.txt`:
+
+```bash
 md5sum holdout47.py calib46.py common46.py | md5sum
 md5sum holdout48.py calib46.py common46.py | md5sum
+```
 
-# 2. second held-out test (about 15 minutes; same output as results/tables/h48.md)
-NEW="beir_cqa_physics beir_cqa_unix beir_cqa_tex beir_cqa_programmers beir_fever"
-OLD="beir_cqa_english beir_cqa_gaming beir_climate-fever beir_hotpotqa beir_nq"
-BEIR="beir_scifact beir_nfcorpus beir_fiqa beir_arguana beir_scidocs"
+**2. Second held-out test** (about 15 minutes; same output as
+`results/tables/h48.md`):
+
+```bash
+NEW="beir_cqa_physics beir_cqa_unix beir_cqa_tex
+     beir_cqa_programmers beir_fever"
+OLD="beir_cqa_english beir_cqa_gaming beir_climate-fever
+     beir_hotpotqa beir_nq"
+BEIR="beir_scifact beir_nfcorpus beir_fiqa
+      beir_arguana beir_scidocs"
 STARK="amazon_testfull mag_testfull prime_testfull"
-H2=$(for d in $NEW; do for r in mini bge monot5; do echo -n "$d:h48$r "; done; done)
-H1=$(for d in $OLD; do for r in mini bge monot5; do echo -n "$d:h47$r "; done; done)
-IN=$(for d in $STARK; do echo -n "$d:full $d:mini $d:monot5 "; done
-     echo -n "dbpedia_test:dbp dbpedia_test:mini dbpedia_test:monot5 "
-     for d in $BEIR; do echo -n "$d:bge $d:mini $d:monot5 "; done)
-python holdout48.py $H2 --ref47 $H1 --insample $IN --out h48_check
+RR="mini bge monot5"
 
-# 3. budgets and calibration for the 27 study pairs
+H2=""; for d in $NEW; do for r in $RR; do
+  H2="$H2 $d:h48$r"; done; done
+H1=""; for d in $OLD; do for r in $RR; do
+  H1="$H1 $d:h47$r"; done; done
+IN=""
+for d in $STARK; do IN="$IN $d:full $d:mini $d:monot5"; done
+IN="$IN dbpedia_test:dbp dbpedia_test:mini"
+IN="$IN dbpedia_test:monot5"
+for d in $BEIR; do IN="$IN $d:bge $d:mini $d:monot5"; done
+
+python holdout48.py $H2 --ref47 $H1 --insample $IN \
+  --out h48_check
+```
+
+**3. Budgets and calibration** for the 27 study pairs:
+
+```bash
 python budgets46.py $IN --out b46_check
 python calib46.py $IN --out c46_check
 ```
@@ -173,7 +203,8 @@ After the runs, collect everything into the repository:
 
 ```bash
 bash tools/collect_results.sh /path/to/workdir
-zip -qr CheapSelect_results.zip results      # the archive attached to the release
+# the archive attached to the release:
+zip -qr CheapSelect_results.zip results
 ```
 
 ### Pre-registered tests (steps 12 and 13)
