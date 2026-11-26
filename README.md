@@ -14,7 +14,7 @@ Neural re-ranking improves retrieval, but it is expensive. Skipping it for queri
 
 Every per-query result is released, so all tables except the timing measurements can be recomputed on a CPU in minutes.
 
-**Results archive.** The results (per-query files, analysis tables, run logs and checksums; 374 files) are not in the repository tree. They are attached to the release as one file: download `CheapSelect_results.zip` from [release v1.0](https://github.com/giannisvassiliou/CheapSelect/releases/tag/v1.0) and unzip it in the repository folder, which creates `results/`.
+**Results archive.** The results (per-query files, analysis tables, run logs and checksums; 374 files) are not in the repository tree. They are attached to the release as one file: download `CheapSelect_results.zip` and unzip it in the repository folder, which creates `results/`.
 
 ---
 
@@ -22,7 +22,7 @@ Every per-query result is released, so all tables except the timing measurements
 
 | Path | What it is |
 |---|---|
-| `README.md`, `LICENSE`, `CITATION.cff` | this file, MIT license, citation |
+| `README.md`| this file |
 | `requirements.txt`, `requirements.lock` | Python packages; exact versions used for the paper |
 | `src/` | all code; run the scripts from this folder (or set `WORKDIR`) |
 | `prereg/` | pre-registration files, written before the corresponding runs |
