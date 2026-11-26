@@ -36,8 +36,9 @@ Every per-query result is released, so all tables except the timing measurements
 |---|---|
 | `combo_search44.py` | retrieval and re-ranking pipeline: BM25, dense or hybrid first stage; re-rankers; selector signals; per-query output |
 | `combo_search33/34/37/38/42/43.py` | earlier versions of the same pipeline that produced some of the paper's runs (see "Provenance") |
-| `prepare_beir.py` | BEIR and DBpedia-Entity download and conversion |
-| `fetch_mteb47.py` | CQADupStack from its MTEB copy on Hugging Face (removes duplicate judgements) |
+| `combo_search44.py prepare-stark`, `prepare-queries` | STaRK Amazon, MAG and Prime conversion (subcommands of the pipeline) |
+| `prepare_beir.py` | DBpedia-Entity and all BEIR collections (including Climate-FEVER, HotpotQA, NQ, FEVER) |
+| `fetch_mteb47.py` | CQADupStack forums from their MTEB copy on Hugging Face (removes duplicate judgements); `prepare_beir.py` then converts them |
 
 **`src/`: analyses**
 
@@ -164,20 +165,71 @@ All analyses use fixed seeds (splits: seed 42), so their outputs match the relea
 
 ## Data
 
-Nothing is redistributed. Every corpus is downloaded from its public source and converted to two JSONL files:
+Nothing is redistributed. Every collection is downloaded from its
+public source and converted to two JSONL files, one folder per
+collection:
 
 - `corpus.jsonl`: `{"id", "fields": {column: text}}`
 - `queries.jsonl`: `{"qid", "query", "answers", "qtype"}`
 
-| Collections | Source | Command |
-|---|---|---|
-| STaRK Amazon, MAG, Prime (full test splits) | `stark-qa` | `python combo_search44.py prepare-stark --name {amazon,mag,prime} --out <folder> ...`, then `prepare-queries --split test --max-queries 0 --like <folder> --out {amazon,mag,prime}_testfull` (see `run_full.sh`) |
-| DBpedia-Entity v2, test | BEIR on Hugging Face | `python prepare_beir.py --split test --out dbpedia_test` |
-| BEIR SciFact, NFCorpus, FiQA, ArguAna, SciDocs | BEIR on Hugging Face (zip as fallback) | inside `run_beir_all*.sh` |
-| Held-out 1: CQADupStack English, Gaming; Climate-FEVER; HotpotQA; NQ | MTEB copy (CQADupStack), BEIR | `run_holdout47.sh`, step 1 |
-| Held-out 2: CQADupStack Physics, Unix, TeX, Programmers; FEVER | MTEB copy (CQADupStack), BEIR | `run_holdout48.sh`, step 1 |
+Three converters cover all 19 collections:
 
-The MTEB copy of CQADupStack ships every judgement twice (`qrels/test.jsonl` and `qrels/test.tsv`). `fetch_mteb47.py` reads one file and drops duplicate pairs. Duplicates leave MRR unchanged but lower nDCG@10. The two held-out-1 forums were first run with duplicates and then re-run after de-duplication; only the re-runs are used.
+| Collections | Source | Converter |
+|---|---|---|
+| STaRK Amazon, MAG, Prime | `stark-qa` package | `combo_search44.py prepare-stark` and `prepare-queries` |
+| DBpedia-Entity v2; BEIR SciFact, NFCorpus, FiQA, ArguAna, SciDocs; Climate-FEVER, HotpotQA, NQ, FEVER | BEIR on Hugging Face (BEIR zip as fallback) | `prepare_beir.py` |
+| CQADupStack English, Gaming, Physics, Unix, TeX, Programmers | MTEB copy on Hugging Face | `fetch_mteb47.py`, then `prepare_beir.py` |
+
+The run scripts call these converters themselves. To prepare a
+collection by hand, run the commands below from `src/`.
+
+**STaRK** (full corpus, test split; the table is built once, then
+the test questions are written next to it):
+
+```bash
+for c in amazon mag prime; do
+  python combo_search44.py prepare-stark --name $c \
+    --split test --max-queries 0 --out ${c}_table
+  python combo_search44.py prepare-queries --name $c \
+    --split test --max-queries 0 --like ${c}_table \
+    --out ${c}_testfull
+done
+```
+
+Defaults of `prepare-stark`: full corpus, textual attributes
+capped at 3,000 characters, and up to 20 linked items per relation
+type as extra columns. The columns used for each collection are
+listed in `run_full.sh`.
+
+**DBpedia-Entity and BEIR:**
+
+```bash
+python prepare_beir.py --split test --out dbpedia_test
+for d in scifact nfcorpus fiqa arguana scidocs \
+         climate-fever hotpotqa nq fever; do
+  python prepare_beir.py --name $d --split test \
+    --out beir_$d
+done
+```
+
+**CQADupStack:**
+
+```bash
+for f in english gaming physics unix tex programmers; do
+  python fetch_mteb47.py mteb/cqadupstack-$f \
+    cqadupstack/$f
+  python prepare_beir.py --name cqadupstack-$f \
+    --beir-dir cqadupstack/$f --split test \
+    --out beir_cqa_$f
+done
+```
+
+The MTEB copy of CQADupStack ships every judgement twice
+(`qrels/test.jsonl` and `qrels/test.tsv`). `fetch_mteb47.py` reads
+one file and drops duplicate pairs. Duplicates leave MRR unchanged
+but lower nDCG@10. The two held-out-1 forums were first run with
+duplicates and then re-run after de-duplication; only the re-runs
+are used.
 
 ## Reproducing the paper
 
